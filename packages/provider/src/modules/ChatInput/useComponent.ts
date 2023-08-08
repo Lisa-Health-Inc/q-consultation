@@ -74,6 +74,17 @@ export default createUseComponent((props: ChatInputProps) => {
       }
 
       if (clientId) {
+        const payload = JSON.stringify({
+          aps: {
+            alert: {
+              title: 'You got a new message from the coach',
+              body: messageBody?.trim() || 'New attachment',
+            },
+            badge: 1,
+            sound: 'bingbong.aiff',
+          },
+        })
+
         const pushParameters: PushNotificationParams = {
           notification_type: 'push',
           push_type: 'apns',
@@ -82,9 +93,7 @@ export default createUseComponent((props: ChatInputProps) => {
             process.env.NODE_ENV === 'development'
               ? 'development'
               : 'production',
-          message: QB.pushnotifications.base64Encode(
-            messageBody?.trim() || 'You got a new message from the coach',
-          ),
+          message: `payload=${QB.pushnotifications.base64Encode(payload)}`,
           name: 'chat',
         }
 
