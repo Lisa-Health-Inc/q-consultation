@@ -74,7 +74,10 @@ export default function Chat(props: ChatProps) {
               chatOpen={activeTab === CHAT_TAB}
             />
             <UploadIndicator type="chat" />
-            <ChatInput dialogId={activeAppointment?.dialog_id} />
+            <ChatInput
+              dialogId={activeAppointment?.dialog_id}
+              clientId={activeAppointment?.client_id}
+            />
           </Tabs.Tab>
           {RESOLUTION_XS && (
             <Tabs.Tab

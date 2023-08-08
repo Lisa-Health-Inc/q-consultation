@@ -23,6 +23,7 @@ import IS_MOBILE from '../../utils/isMobile'
 
 export interface ChatInputProps {
   dialogId?: QBChatDialog['_id']
+  clientId?: QBUser['id']
 }
 
 const createSelector = (dialogId?: QBChatDialog['_id']) =>
@@ -32,7 +33,7 @@ const createSelector = (dialogId?: QBChatDialog['_id']) =>
   })
 
 export default createUseComponent((props: ChatInputProps) => {
-  const { dialogId } = props
+  const { dialogId, clientId } = props
   const selector = createSelector(dialogId)
   const store = useSelector(selector)
   const actions = useActions({
@@ -70,6 +71,30 @@ export default createUseComponent((props: ChatInputProps) => {
 
       if (texboxRef.current) {
         texboxRef.current.innerText = ''
+      }
+
+      if (clientId) {
+        const pushParameters: PushNotificationParams = {
+          notification_type: 'push',
+          push_type: 'apns',
+          user: { ids: [clientId] },
+          environment:
+            process.env.NODE_ENV === 'development'
+              ? 'development'
+              : 'production',
+          message: QB.pushnotifications.base64Encode(
+            messageBody?.trim() || 'You got a new message from the coach',
+          ),
+          name: 'chat',
+        }
+
+        QB.pushnotifications.events.create(pushParameters, (error, result) => {
+          if (error) {
+            console.log(error)
+          } else {
+            console.log('Push Notification is sent.', result)
+          }
+        })
       }
     }
   }
