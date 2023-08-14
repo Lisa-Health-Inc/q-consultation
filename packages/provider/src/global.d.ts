@@ -309,6 +309,10 @@ interface QBChatModule {
       dialogJid: string,
       callback: (error?: QBError, result: unknown) => void,
     ): void
+    listOnlineUsers(
+      dialogJid: string,
+      callback: (users: Array<QBUser['id']>) => void,
+    ): void
   }
   helpers: {
     getDialogJid(dialogId: QBChatDialog['_id']): string
