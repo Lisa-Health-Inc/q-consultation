@@ -80,8 +80,7 @@ export default createUseComponent((props: ChatInputProps) => {
               title: 'You got a new message from the coach',
               body: messageBody?.trim() || 'New attachment',
             },
-            badge: 1,
-            sound: 'bingbong.aiff',
+            name: 'chat',
           },
         })
 
@@ -97,13 +96,34 @@ export default createUseComponent((props: ChatInputProps) => {
           name: 'chat',
         }
 
-        QB.pushnotifications.events.create(pushParameters, (error, result) => {
-          if (error) {
-            console.log(error)
-          } else {
-            console.log('Push Notification is sent.', result)
-          }
-        })
+        const sendPush = () =>
+          QB.pushnotifications.events.create(
+            pushParameters,
+            (error, result) => {
+              if (error) {
+                console.log(error)
+              } else {
+                console.log('Push Notification is sent.', result)
+              }
+            },
+          )
+
+        try {
+          QB.chat.muc.listOnlineUsers(
+            QB.chat.helpers.getRoomJidFromDialogId(dialogId),
+            (users) => {
+              if (!users.includes(clientId)) {
+                sendPush()
+                console.log('Push sent: recipient is offline')
+              } else {
+                console.log('Skip push: recipient is online')
+              }
+            },
+          )
+        } catch (error: any) {
+          sendPush()
+          console.log('listOnlineUsers error', error)
+        }
       }
     }
   }
