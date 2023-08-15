@@ -90,8 +90,8 @@ export default createUseComponent((props: ChatInputProps) => {
               if (err) {
                 console.log('Get messages error', stringifyError(err))
               } else {
-                badge += messages.items.filter((msg) =>
-                  msg.read_ids?.includes(clientId),
+                badge += messages.items.filter(
+                  (msg) => !!msg.read_ids && !msg.read_ids.includes(clientId),
                 ).length
 
                 console.log(`Badge count ${badge}`)
