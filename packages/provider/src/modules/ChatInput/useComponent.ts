@@ -137,22 +137,24 @@ export default createUseComponent((props: ChatInputProps) => {
             },
           )
 
-        try {
-          QB.chat.muc.listOnlineUsers(
-            QB.chat.helpers.getRoomJidFromDialogId(dialogId),
-            (users) => {
-              if (!users.includes(clientId)) {
-                sendPush()
-                console.log('Push sent: recipient is offline')
-              } else {
-                console.log('Skip push: recipient is online')
-              }
-            },
-          )
-        } catch (error: unknown) {
-          sendPush()
-          console.log('listOnlineUsers error', stringifyError(error))
-        }
+        // try {
+        //   QB.chat.muc.listOnlineUsers(
+        //     QB.chat.helpers.getRoomJidFromDialogId(dialogId),
+        //     (users) => {
+        //       if (!users.includes(clientId)) {
+        //         sendPush()
+        //         console.log('Push sent: recipient is offline')
+        //       } else {
+        //         console.log('Skip push: recipient is online')
+        //       }
+        //     },
+        //   )
+        // } catch (error: unknown) {
+        //   sendPush()
+        //   console.log('listOnlineUsers error', stringifyError(error))
+        // }
+
+        sendPush()
       }
     }
   }
