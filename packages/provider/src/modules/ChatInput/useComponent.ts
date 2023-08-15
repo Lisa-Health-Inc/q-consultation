@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import { stringifyError } from '../../utils/parse'
 
 import { sendMessage, uploadFile, showNotification } from '../../actionCreators'
 import {
@@ -74,37 +75,63 @@ export default createUseComponent((props: ChatInputProps) => {
       }
 
       if (clientId) {
-        const payload = JSON.stringify({
-          aps: {
-            alert: {
-              title: 'You got a new message from the coach',
-              body: messageBody?.trim() || 'New attachment',
-            },
-            name: 'chat',
-          },
-        })
-
-        const pushParameters: PushNotificationParams = {
-          notification_type: 'push',
-          push_type: 'apns',
-          user: { ids: [clientId] },
-          environment:
-            process.env.NODE_ENV === 'development'
-              ? 'development'
-              : 'production',
-          message: `payload=${QB.pushnotifications.base64Encode(payload)}`,
-          name: 'chat',
-        }
-
         const sendPush = () =>
-          QB.pushnotifications.events.create(
-            pushParameters,
-            (error, result) => {
-              if (error) {
-                console.log(error)
+          QB.chat.message.list(
+            {
+              chat_dialog_id: dialogId,
+              sort_desc: 'date_sent',
+              limit: 50,
+              skip: 0,
+              mark_as_read: 0,
+            },
+            (err, messages) => {
+              let badge = 1
+
+              if (err) {
+                console.log('Get messages error', stringifyError(err))
               } else {
-                console.log('Push Notification is sent.', result)
+                badge += messages.items.filter((msg) =>
+                  msg.read_ids?.includes(clientId),
+                ).length
+
+                console.log(`Badge count ${badge}`)
               }
+
+              const payload = JSON.stringify({
+                aps: {
+                  alert: {
+                    title: 'You got a new message from the coach',
+                    body: messageBody?.trim() || 'New attachment',
+                  },
+                  badge,
+                  name: 'chat',
+                },
+              })
+
+              const pushParameters: PushNotificationParams = {
+                notification_type: 'push',
+                push_type: 'apns',
+                user: { ids: [clientId] },
+                environment:
+                  process.env.NODE_ENV === 'development'
+                    ? 'development'
+                    : 'production',
+                message: `payload=${QB.pushnotifications.base64Encode(
+                  payload,
+                )}`,
+                name: 'chat',
+              }
+
+              QB.pushnotifications.events.create(
+                pushParameters,
+                (error, result) => {
+                  if (error) {
+                    console.log(stringifyError(error))
+                  } else {
+                    console.log('Push Notification is sent.', result)
+                  }
+                },
+              )
             },
           )
 
@@ -120,9 +147,9 @@ export default createUseComponent((props: ChatInputProps) => {
               }
             },
           )
-        } catch (error: any) {
+        } catch (error: unknown) {
           sendPush()
-          console.log('listOnlineUsers error', error)
+          console.log('listOnlineUsers error', stringifyError(error))
         }
       }
     }
