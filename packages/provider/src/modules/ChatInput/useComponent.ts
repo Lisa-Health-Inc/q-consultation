@@ -90,9 +90,10 @@ export default createUseComponent((props: ChatInputProps) => {
               if (err) {
                 console.log('Get messages error', stringifyError(err))
               } else {
-                badge += messages.items.filter(
-                  (msg) => !!msg.read_ids && !msg.read_ids.includes(clientId),
-                ).length
+                badge =
+                  messages.items.filter(
+                    (msg) => !!msg.read_ids && !msg.read_ids.includes(clientId),
+                  ).length || 1
 
                 console.log(`Badge count ${badge}`)
               }
@@ -104,6 +105,7 @@ export default createUseComponent((props: ChatInputProps) => {
                     body: messageBody?.trim() || 'New attachment',
                   },
                   badge,
+                  sound: 'default',
                   name: 'chat',
                 },
               })
