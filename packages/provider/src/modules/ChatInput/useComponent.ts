@@ -100,7 +100,8 @@ export default createUseComponent((props: ChatInputProps) => {
             const payload = JSON.stringify({
               aps: {
                 alert: {
-                  title: 'You got a new message from the coach',
+                  title: 'Midday',
+                  subtitle: 'You have a new message from your menopause coach',
                   body: messageBody?.trim() || 'New attachment',
                 },
                 badge,
