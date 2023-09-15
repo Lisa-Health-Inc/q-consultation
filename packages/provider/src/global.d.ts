@@ -133,6 +133,15 @@ type ChatConnectParams =
       password: string
     }
 
+type PushNotificationParams = {
+  notification_type: 'push' | 'email'
+  environment: 'development' | 'production'
+  message: string
+  push_type: 'apns' | 'apns_voip' | 'gcm' | 'mpns' | 'bbps'
+  name: string
+  user: { ids: Array<QBUser['id']> }
+}
+
 interface ChatMessageAttachment {
   /** ID of the file on QuickBlox server (UID of file from QB.content.createAndUpload) */
   id: string | number
@@ -300,6 +309,10 @@ interface QBChatModule {
       dialogJid: string,
       callback: (error?: QBError, result: unknown) => void,
     ): void
+    listOnlineUsers(
+      dialogJid: string,
+      callback: (users: Array<QBUser['id']>) => void,
+    ): void
   }
   helpers: {
     getDialogJid(dialogId: QBChatDialog['_id']): string
@@ -331,6 +344,16 @@ interface QBChatModule {
   onReconnectFailedListener?: (error: unknown) => void
   onDisconnectedListener?: VoidFunction
   onReconnectListener?: VoidFunction
+}
+
+interface QBPushNotificationsModule {
+  events: {
+    create: (
+      params: PushNotificationParams,
+      callback: (error?: QBError, result: unknown) => void,
+    ) => void
+  }
+  base64Encode(str: string): string
 }
 
 interface QBContentObject {
@@ -620,6 +643,7 @@ interface Quickblox {
   buildNumber: string
   chat: QBChatModule
   content: QBContentModule
+  pushnotifications: QBPushNotificationsModule
   createSession(callback: (error?: QBError, session: QBSession) => void): void
   data: QBDataModule
   destroySession(callback: (error?: QBError, res: unknown) => void): void

@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import { stringifyError } from '../../utils/parse'
 
 import { sendMessage, uploadFile, showNotification } from '../../actionCreators'
 import {
@@ -23,6 +24,7 @@ import IS_MOBILE from '../../utils/isMobile'
 
 export interface ChatInputProps {
   dialogId?: QBChatDialog['_id']
+  clientId?: QBUser['id']
 }
 
 const createSelector = (dialogId?: QBChatDialog['_id']) =>
@@ -32,7 +34,7 @@ const createSelector = (dialogId?: QBChatDialog['_id']) =>
   })
 
 export default createUseComponent((props: ChatInputProps) => {
-  const { dialogId } = props
+  const { dialogId, clientId } = props
   const selector = createSelector(dialogId)
   const store = useSelector(selector)
   const actions = useActions({
@@ -70,6 +72,65 @@ export default createUseComponent((props: ChatInputProps) => {
 
       if (texboxRef.current) {
         texboxRef.current.innerText = ''
+      }
+
+      if (clientId) {
+        QB.chat.message.list(
+          {
+            chat_dialog_id: dialogId,
+            sort_desc: 'date_sent',
+            limit: 50,
+            skip: 0,
+            mark_as_read: 0,
+          },
+          (err, messages) => {
+            let badge = 1
+
+            if (err) {
+              console.log('Get messages error', stringifyError(err))
+            } else {
+              badge =
+                messages.items.filter(
+                  (msg) => !!msg.read_ids && !msg.read_ids.includes(clientId),
+                ).length || 1
+
+              console.log(`Badge count ${badge}`)
+            }
+
+            const payload = JSON.stringify({
+              aps: {
+                alert: {
+                  title: 'Midday',
+                  subtitle: 'You have a new message from your menopause coach',
+                  body: messageBody?.trim() || 'New attachment',
+                },
+                badge,
+                sound: 'default',
+                name: 'chat',
+              },
+            })
+
+            const pushParameters: PushNotificationParams = {
+              notification_type: 'push',
+              push_type: 'apns',
+              user: { ids: [clientId] },
+              environment:
+                process.env.NODE_ENV === 'development'
+                  ? 'development'
+                  : 'production',
+              message: `payload=${QB.pushnotifications.base64Encode(payload)}`,
+              name: 'chat',
+            }
+
+            QB.pushnotifications.events.create(pushParameters, (error) => {
+              if (error) {
+                console.log(stringifyError(error))
+              } else {
+                console.log('Push Notification is sent')
+              }
+            })
+          },
+        )
       }
     }
   }
